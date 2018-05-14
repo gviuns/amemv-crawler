@@ -27,11 +27,11 @@ class DownloadWorker(Thread):
 
     def run(self):
         while True:
-            medium_type, uri, download_url, target_folder = self.queue.get()
-            self.download(medium_type, uri, download_url, target_folder)
+            medium_type, uri, download_url, target_folder ,desc= self.queue.get()
+            self.download(medium_type, uri, download_url, target_folder,desc)
             self.queue.task_done()
 
-    def download(self, medium_type, uri, download_url, target_folder):
+    def download(self, medium_type, uri, download_url, target_folder,desc):
         if medium_type == 'image':
             self._download(uri, 'image', download_url, target_folder)
         elif medium_type == 'video':
@@ -46,10 +46,11 @@ class DownloadWorker(Thread):
                 'improve_bitrate': '0'
             }
             download_url = download_url.format('&'.join([key + '=' + download_params[key] for key in download_params]))
-            self._download(uri, 'video', download_url, target_folder)
+            self._download(uri, 'video', download_url, target_folder,desc)
 
-    def _download(self, uri, medium_type, medium_url, target_folder):
+    def _download(self, uri, medium_type, medium_url, target_folder, desc):
         file_name = uri
+        file_name = desc
         if medium_type == 'video':
             file_name += '.mp4'
         elif medium_type == 'image':
@@ -155,7 +156,7 @@ class CrawlerScheduler(object):
     def _join_download_queue(self, aweme, target_folder):
         try:
             if aweme.get('video', None):
-                self.queue.put(('video', aweme['video']['play_addr']['uri'], None, target_folder))
+                self.queue.put(('video', aweme['video']['play_addr']['uri'], None, target_folder,aweme['desc']))
             else:
                 if aweme.get('image_infos', None):
                     image = aweme['image_infos']['label_large']
